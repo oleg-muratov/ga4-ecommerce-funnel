@@ -14,8 +14,8 @@ ORDER BY n_events DESC;
 
 -- 2. Funnel events per day; then the same for one week via _TABLE_SUFFIX (compare dry-run sizes).
 --    Dry run: 94.33 MB (all 92 days); 9.77 MB with AND _TABLE_SUFFIX BETWEEN '20201201' AND '20201207'
---     Result: add_to_cart missing Nov 2-24 (partial Nov 16-20); select_item tracked from Nov 23;
---            view_item_list ~never; begin_checkout \simeq 2-3x add_shipping_info from mid-Nov;
+--    Result: add_to_cart missing Nov 2-24 (partial Nov 16-20); select_item tracked from Nov 23;
+--            view_item_list ~never; begin_checkout about 2-3x add_shipping_info from mid-Nov;
 --            peak Dec 8-11; Cyber Monday (Nov 30) > Black Friday; trough Dec 24-Jan 3.
 
 SELECT
@@ -40,7 +40,6 @@ WHERE event_name IN (
 -- AND _TABLE_SUFFIX BETWEEN '20201201' AND '20201207'
 GROUP BY event_date, event_name
 ORDER BY event_date, funnel_step;
-
 
 -- 3. What is inside event_params: keys, counts, and which value field is filled.
 --    Dry run: 23.15 MB
@@ -73,6 +72,8 @@ ORDER BY n_events DESC;
 --            113 session IDs shared by 2+ visitors -> a session = user_pseudo_id + session_id; 84 sessions have
 --            no session_start (likely began the previous day); 94 of 4,525 sessions include a purchase.
 --            Session IDs are scrambled (not start times). Several events share one timestamp.
+--            Full day (02_sessions_checks.sql): 88 visits without session_start; 100 of 5,000 visits
+--            include a purchase.
 
 SELECT
   e.event_date,
@@ -89,24 +90,6 @@ FROM `bigquery-public-data.ga4_obfuscated_sample_ecommerce.events_*` AS e
 WHERE _TABLE_SUFFIX = '20201201'
 ORDER BY e.user_pseudo_id, e.event_timestamp
 LIMIT 20;  -- remove LIMIT for the row-count check (expect 71,804)
-
--- (untidied Q4)
-
-SELECT e.event_date, event_name, user_pseudo_id,
-      (SELECT ep.value.int_value
-        FROM UNNEST(e.event_params) AS ep
-        WHERE ep.key = 'ga_session_id'
-        ) AS session_id,
-      (SELECT ep.value.string_value
-        FROM UNNEST(e.event_params) AS ep
-        WHERE ep.key = 'page_location'
-        ) AS page_location,
-        e.event_timestamp
-FROM `bigquery-public-data.ga4_obfuscated_sample_ecommerce.events_*` AS e
-WHERE _TABLE_SUFFIX = '20201201'
-ORDER BY user_pseudo_id, e.event_timestamp
--- LIMIT 20
-;
 
 -- 5. Does event_params carry source / medium? (decides the session channel)
 
@@ -150,17 +133,16 @@ ORDER BY n_events DESC;
 --             (direct)/(none) 2,408 (10%), google/cpc 433 (2%), email 17, affiliate 17, external referrals small.
 --             Scrambled: <Other> and (data deleted) = 3,787 (15%). 285 events: medium 'organic' with no source.
 
-
-WITH event_sources AS
-(SELECT
+WITH event_sources AS (
+  SELECT
     (SELECT ep.value.string_value
-   FROM UNNEST(e.event_params) AS ep
-   WHERE ep.key = 'source') AS source,
-  (SELECT ep.value.string_value
-   FROM UNNEST(e.event_params) AS ep
-   WHERE ep.key = 'medium') AS medium
-FROM `bigquery-public-data.ga4_obfuscated_sample_ecommerce.events_*` AS e
-WHERE _TABLE_SUFFIX = '20201201'
+     FROM UNNEST(e.event_params) AS ep
+     WHERE ep.key = 'source') AS source,
+    (SELECT ep.value.string_value
+     FROM UNNEST(e.event_params) AS ep
+     WHERE ep.key = 'medium') AS medium
+  FROM `bigquery-public-data.ga4_obfuscated_sample_ecommerce.events_*` AS e
+  WHERE _TABLE_SUFFIX = '20201201'
 )
 
 SELECT source, medium, COUNT(*) AS n_events
