@@ -1,5 +1,5 @@
 import pytest
-from stats import count_change_test, two_proportion_test, coverage_guard, adjust_pvalues
+from stats import count_change_test, dispersion, two_proportion_test, coverage_guard, adjust_pvalues
 import pandas as pd
 
 def test_count_change_plain_poisson():
@@ -21,9 +21,12 @@ def test_bh_known_answer():
 def test_zero_cases():
     z1, p1 = count_change_test(0, 0) 
     z2, p2 = two_proportion_test(0, 0, 5, 100)
-    assert (z1, p1)== (0.0, 1.0)
+    assert (z1, p1) == (0.0, 1.0)
     assert (z2, p2) == (0.0, 1.0)
 
 def test_guard_refuses_tuesday():
     with pytest.raises(ValueError):
         coverage_guard(pd.Timestamp("2020-12-08"))
+        
+def test_dispersion():
+    assert dispersion(pd.Series([10, 20])) == pytest.approx(3.333, abs=0.001)

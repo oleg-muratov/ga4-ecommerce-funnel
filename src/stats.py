@@ -138,3 +138,7 @@ def week_over_week(weekly, phi_visits, phi_purchases):
         conversion_dict = {"week": label, "metric": "conversion", "last": lw['conversion'], "this": tw['conversion'], "z": z, "p": p}
         rows.append(conversion_dict)
     return pd.DataFrame(rows)
+
+def dispersion(counts):
+    """Dispersion factor φ: mean of (x_t - x_{t - 1})² / (x_t + x_{t - 1}) over consecutive weeks; about 1 for Poisson counts"""
+    return float((((counts-counts.shift(1))**2)/(counts+counts.shift(1))).mean())
