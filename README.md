@@ -126,11 +126,11 @@ The queries and their results are in `sql/04_quality_checks.sql` and `sql/02_ses
 
 ## Reproduce
 
-Requires Python 3 and a Google Cloud project with BigQuery (the free sandbox is enough; the sessions query
-reads about 1.7 GB).
+Requires Python 3.12 or later, the [Google Cloud CLI](https://cloud.google.com/sdk/docs/install), and a Google
+Cloud project with BigQuery (the free sandbox is enough; the sessions query reads about 1.7 GB).
 
 ```bash
-python -m venv .venv && source .venv/bin/activate
+python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 gcloud auth application-default login
 echo "GOOGLE_CLOUD_PROJECT=your-project-id" > .env
@@ -139,6 +139,9 @@ python src/bq.py sql/02_sessions.sql    # about 1.7 GB; cached in data/cache/
 python src/export.py                    # writes tableau/*.csv
 pytest
 ```
+
+The notebook uses paths relative to its own folder (`../src`, `../data`), so run it with `notebooks/` as the
+working directory, which Jupyter and VS Code use by default.
 
 ## Data
 
