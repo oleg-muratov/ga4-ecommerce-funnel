@@ -35,7 +35,7 @@ WITH events AS (
     e.device.category AS device_category,
     e.geo.country AS country
   FROM `bigquery-public-data.ga4_obfuscated_sample_ecommerce.events_*` AS e
-  -- WHERE _TABLE_SUFFIX = '20201201'  -- one day while checking; remove for all 92 days
+  -- WHERE _TABLE_SUFFIX = '20201201'  -- one-day filter used while checking (Dec 1); off for all 92 days
 ),
 
 visits AS (

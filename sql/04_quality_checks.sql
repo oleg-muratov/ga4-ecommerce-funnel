@@ -74,7 +74,7 @@ ORDER BY n_purchases DESC
 LIMIT 20;
 
 -- C. Self-referrals: how often is the store's own domain recorded as the traffic source? (all 92 days)
---    Dry run: (fill in, about 1.2 GB)
+--    Dry run: not recorded; about 1.1 GB (event_params for every event, as in B, without B's three smaller columns).
 --    Result: 1,428,080 events carry a source (33% of all 4,295,584 events); 756,057 of them name the store's own
 --            domain (shop.googlemerchandisestore.com / googlemerchandisestore.com) -> 52.9% self-referral
 --            (Dec 1 alone: 54%). The full-period share matches one day's, so it is not a one-day glitch; it points to the
@@ -99,7 +99,7 @@ FROM event_sources;
 
 -- D. Visits without a session_start event, by visit date (all 92 days).
 --    Uses the events and visits steps of 02_sessions.sql plus one flag, has_session_start.
---    Dry run: (fill in, about 1.7 GB)
+--    Dry run: 1.5 GB, the same as 02_sessions.sql (it reads the same columns of the same tables).
 --    Result: 360,129 visits; 5,272 (1.5%) have no session_start (02 check 1 found at least 5,159; the other 113
 --            are hidden there by visits that record two session_start events).
 --            Most days: about 1.2% (median 43 visits a day), a steady trickle.
